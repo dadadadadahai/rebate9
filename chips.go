@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -49,13 +50,14 @@ func rebateChipHandle(dclient *mongo.Database, valdata flowing_final) {
 			oneUnderNum := parentRelationInfo.OneUnderNum
 			//取时间戳判断是不是同一天
 			rebateval := calcRebateVal(oneUnderNum, valdata.Tchip)
-			if parentRelationInfo.AddFlowingTimes == time.Now().Format("20060102") {
+			fmt.Printf("AddFlowingTimes %+v\n  tiem%v   rebateval", parentRelationInfo.AddFlowingTimes, time.Now().Format(time.DateOnly), rebateval)
+			if parentRelationInfo.AddFlowingTimes == time.Now().Format(time.DateOnly) {
 				//是同一天 累加
 				dclient.Collection("extension_relation").UpdateOne(context.TODO(), bson.M{"_id": parentId}, bson.M{"$inc": bson.M{"todayBetFall": rebateval}})
 			} else {
 				dclient.Collection("extension_relation").UpdateOne(context.TODO(), bson.M{"_id": parentId}, bson.M{"$inc": bson.M{"tomorrowFlowingChips": parentRelationInfo.TodayBetFall}})
 				dclient.Collection("extension_relation").UpdateOne(context.TODO(), bson.M{"_id": parentId}, bson.M{"$set": bson.M{"todayBetFall": rebateval}})
-				dclient.Collection("extension_relation").UpdateOne(context.TODO(), bson.M{"_id": parentId}, bson.M{"$set": bson.M{"addFlowingTimes": time.Now().Format("20060102")}})
+				dclient.Collection("extension_relation").UpdateOne(context.TODO(), bson.M{"_id": parentId}, bson.M{"$set": bson.M{"addFlowingTimes": time.Now().Format(time.DateOnly)}})
 			}
 		}
 	}

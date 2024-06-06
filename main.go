@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/go-ini/ini"
@@ -150,7 +151,9 @@ func getRelationTable(dclient *mongo.Database, uid int) *relation {
 	err := dclient.Collection("extension_relation").FindOne(context.TODO(), filter).Decode(relationTable)
 	if err != nil {
 		//log.Println("getRelationTable=", err.Error())
-		selflog.Error("getRelationTable=" + err.Error())
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			selflog.Error("getRelationTable=" + err.Error())
+		}
 		return nil
 	}
 	return relationTable
